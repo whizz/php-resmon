@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Resmon PHP class
+ * Resmon PHP base class
  * 
  * Can be used to generate Resmon parsable outputs. These outputs can be consumed
  * in Reconnoiter or other monitoring solutions.
@@ -10,7 +10,7 @@
  * https://labs.omniti.com/labs/resmon
  * 
  * @author Michal Taborsky <michal@taborsky.cz>
- *
+ * 
  */
 class Resmon {
 	
@@ -44,6 +44,8 @@ class Resmon {
 	}
 	
 	/**
+	 * Set currently used module name
+	 * 
 	 * @param string $module
 	 */
 	public function setModule($module) {
@@ -51,6 +53,8 @@ class Resmon {
 	}
 	
 	/**
+	 * Set currently used service
+	 * 
 	 * @param string $service
 	 */
 	public function setService($service) {
@@ -116,4 +120,4 @@ class Resmon {
 		return $output;
 	}
 	
-}
+} // Resmon
