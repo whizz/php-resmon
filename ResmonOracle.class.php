@@ -24,7 +24,15 @@ class ResmonOracle extends Resmon {
 	protected $RAC = false;
 	protected $viewPrefix = 'V$';
 	
-	function __construct($username, $password, $connectString, $isRAC = false) {
+	/**
+	 * Class constructor
+	 * 
+	 * @param string $username Oracle user to connect as, must have privileges to querid tables
+	 * @param string $password Oracle password
+	 * @param string $connectString Oracle connec string (TNS name prefferably)
+	 * @param boolean $isRAC Set to true if this is a RAC environment (default: false)
+	 */
+	public function __construct($username, $password, $connectString, $isRAC = false) {
 		
 		$tstart = microtime ( true );
 		$this->db = @oci_connect ( $username, $password, $connectString );
@@ -45,7 +53,13 @@ class ResmonOracle extends Resmon {
 	
 	}
 	
-	function getSysStat() {
+	
+	/**
+	 * Collect metrics from (G)V$SYSSTAT view
+	 * 
+	 * @return boolean True on success, false on failure
+	 */
+	public function getSysStat() {
 		
 		if (!$this->db) {
 			return false;
@@ -60,8 +74,11 @@ class ResmonOracle extends Resmon {
 		$this->setModule ( 'Oracle::SysStat' );
 		$ok = false;
 		if ($result) {
+			$this->setService('local');
 			while ( $row = oci_fetch_assoc ( $stm ) ) {
-				$this->setService ( 'Inst_' . $row ['INST_ID'] );
+				if ($this->RAC) {
+					$this->setService ( 'Inst_' . $row ['INST_ID'] );
+				}
 				$this->addMetric ( $row ['NAME'], $row ['VALUE'], self::TYPE_LONGINT );
 				$this->setState ( self::STATE_OK );
 				$instances [$row ['INST_ID']] = true;
@@ -72,10 +89,11 @@ class ResmonOracle extends Resmon {
 		$this->setService('local');
 		$this->addMetric ( "sysstat_time", ($tsysstat - $tstart) * 1000, self::TYPE_UNSIGNED_INT );
 		$this->addMetric ( "instances", count ( $instances ), Resmon::TYPE_INT );
-	
+		return true;
+		
 	}
 	
-	function __destruct() {
+	public function __destruct() {
 		if ($this->db) {
 			oci_close($this->db);
 		}
