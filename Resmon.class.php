@@ -6,11 +6,15 @@
  * Can be used to generate Resmon parsable outputs. These outputs can be consumed
  * in Reconnoiter or other monitoring solutions.
  * 
+ * 
  * See the Resmon project website for further info on the format:
  * https://labs.omniti.com/labs/resmon
  * 
- * @author Michal Taborsky <michal@taborsky.cz>
+ * Copyright (c) 2011 Michal Taborsky
+ * See LICENSE file for licensing info
  * 
+ * @author Michal Taborsky <michal@taborsky.cz>
+ *
  */
 class Resmon {
 	
@@ -82,7 +86,7 @@ class Resmon {
 	 * @param string $state State of the check, can be OK, BAD or WARNING
 	 */
 	public function setState($state = self::STATE_OK) {
-		$this->data [$this->getModule ()] [$this->getService ()] ['state'] [] = $state;
+		$this->data [$this->getModule ()] [$this->getService ()] ['state'] = $state;
 	}
 
 	/**
@@ -100,17 +104,32 @@ class Resmon {
 			foreach ($services as $service => $serviceData) {
 				$output .= sprintf("\t<ResmonResult module=\"%s\" service=\"%s\">\n", 
 					htmlentities($module), htmlentities($service));
-				$output .= sprintf("\t<last_update>%d</last_update>\n", time());
+				$output .= sprintf("\t\t<last_update>%d</last_update>\n", time());
 				
 				foreach ($serviceData['metrics'] as $metric) {
+					
+					switch ($metric['type']) {
+						case self::TYPE_FLOAT:	
+							$value = sprintf('%f', $metric['value']); 
+							break;
+						case self::TYPE_INT:
+						case self::TYPE_LONGINT:
+						case self::TYPE_UNSIGNED_INT:
+						case self::TYPE_UNSIGNED_LONGINT:
+							$value = sprintf('%d', $metric['value']); 
+							break;
+						default:
+							$value = sprintf('%s', $metric['value']);
+					}
+					
 					$output .= sprintf ( "\t\t<metric name=\"%s\" type=\"%s\">%s</metric>\n", 
-						htmlentities($metric['name']), $metric['type'], htmlentities($metric['value']) );
+						htmlentities($metric['name']), $metric['type'], htmlentities($value) );
 				}
-				$output .= sprintf("\t\t<state>%s</state>\n\t</ResmonResult>", 
+				$output .= sprintf("\t\t<state>%s</state>\n\t</ResmonResult>\n", 
 					empty($serviceData['state'])?self::STATE_OK:$serviceData['state']);
 			}
 		}
-		$output .= '</ResmonResults>';
+		$output .= "</ResmonResults>\n";
 		
 		if ($print) {
 			header ( "Content-Type: text/xml; encoding=UTF-8" );
