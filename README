@@ -26,5 +26,20 @@ Collection of classes enabling generation of Resmon format outputs.
 
 Included classes
 
-Resmon.class.php - 	base class to handle adding metrics and formatting the XML
-					output, all other classes inherit from it
+- Resmon.class.php 	
+base class to handle adding metrics and formatting the XML output, all other 
+classes inherit from it.
+
+- ResmonOracle.class.php
+extension of the Resmon class, collects metrics from Oracle Database
+
+
+Usage
+-----
+
+1. Include class files
+2. Instantiate the class
+3. Call methods to collect metrics
+4. Call the outputAsXML method to print the XML file
+
+For sample usage, see example-oracle.php
