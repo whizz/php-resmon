@@ -40,9 +40,9 @@ When initializiing the class, specify whether it is a RAC environment.
 
 ## Author
 
-Created by Michal Taborsky <michal@taborsky.cz>
-http://www.taborsky.cz/
-http://twitter.com/whizz
+-  Michal Taborsky <michal@taborsky.cz>
+-  <http://www.taborsky.cz/>
+-  <http://twitter.com/whizz>
 
 
 ## License
