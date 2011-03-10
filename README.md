@@ -12,6 +12,7 @@ all other classes inherit from it.
 Extension of the Resmon class, collects metrics from Oracle Database, 
 provides methods to gather various Oracle metric types. Currently
 supports methods:
+
 -  getSysStat - gather (G)V$SYSSTAT metrics
 
 When initializiing the class, specify whether it is a RAC environment.
