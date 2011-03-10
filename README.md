@@ -14,6 +14,7 @@ provides methods to gather various Oracle metric types. Currently
 supports methods:
 
 -  getSysStat - gather (G)V$SYSSTAT metrics
+-  getDRCPStats - gather DRCP (connection pool) statistics, from (G)V$CPOOL_STATS
 
 When initializiing the class, specify whether it is a RAC environment.
 
@@ -34,8 +35,14 @@ When initializiing the class, specify whether it is a RAC environment.
 	require_once('ResmonOracle.class.php');
 	$resmon = new ResmonOracle('resmon','resmon', 'MYTNSNAME', true);
 	$resmon->getSysStat();
+	$resmon->getDRCPStats();
 	$resmon->outputAsXML();
 
+## Author
+
+Created by Michal Taborsky <michal@taborsky.cz>
+http://www.taborsky.cz/
+http://twitter.com/whizz
 
 
 ## License
@@ -53,3 +60,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+
+Note: The XSL and CSS stylesheets are borrowed from the official
+Resmon distribution <https://labs.omniti.com/labs/resmon> 

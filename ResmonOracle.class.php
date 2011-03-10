@@ -23,6 +23,7 @@ class ResmonOracle extends Resmon {
 	protected $db;
 	protected $RAC = false;
 	protected $viewPrefix = 'V$';
+	protected $semaphore = array ();
 	
 	/**
 	 * Class constructor
@@ -49,10 +50,11 @@ class ResmonOracle extends Resmon {
 		$this->RAC = $isRAC;
 		if ($isRAC) {
 			$this->viewPrefix = 'GV$';
+		} else {
+			$this->viewPrefix = 'V$';
 		}
 	
 	}
-	
 	
 	/**
 	 * Collect metrics from (G)V$SYSSTAT view
@@ -61,11 +63,11 @@ class ResmonOracle extends Resmon {
 	 */
 	public function getSysStat() {
 		
-		if (!$this->db) {
+		if (! $this->db) {
 			return false;
 		}
 		
-		$tstart = microtime(true);
+		$tstart = microtime ( true );
 		$sql = "SELECT * FROM {$this->viewPrefix}SYSSTAT";
 		$stm = oci_parse ( $this->db, $sql );
 		$result = oci_execute ( $stm );
@@ -74,7 +76,7 @@ class ResmonOracle extends Resmon {
 		$this->setModule ( 'Oracle::SysStat' );
 		$ok = false;
 		if ($result) {
-			$this->setService('local');
+			$this->setService ( 'local' );
 			while ( $row = oci_fetch_assoc ( $stm ) ) {
 				if ($this->RAC) {
 					$this->setService ( 'Inst_' . $row ['INST_ID'] );
@@ -86,16 +88,66 @@ class ResmonOracle extends Resmon {
 		}
 		oci_free_statement ( $stm );
 		$this->setModule ( 'Oracle::Core' );
-		$this->setService('local');
+		$this->setService ( 'local' );
 		$this->addMetric ( "sysstat_time", ($tsysstat - $tstart) * 1000, self::TYPE_UNSIGNED_INT );
-		$this->addMetric ( "instances", count ( $instances ), Resmon::TYPE_INT );
+		if (empty ( $this->semaphore ['instances'] )) {
+			$this->addMetric ( "instances", count ( $instances ), Resmon::TYPE_INT );
+			$this->semaphore ['instances'] = true;
+		}
 		return true;
+	
+	}
+	
+	/**
+	 * Collect metrics from DRCP pool stats
+	 * 
+	 * @return boolean True on success, false on failure
+	 */
+	public function getDRCPStats() {
 		
+		if (! $this->db) {
+			return false;
+		}
+		
+		$tstart = microtime ( true );
+		$sql = "SELECT * FROM {$this->viewPrefix}CPOOL_STATS";
+		$stm = oci_parse ( $this->db, $sql );
+		$result = @oci_execute ( $stm );
+		$tend = microtime ( true );
+		
+		$this->setModule ( 'Oracle::DRCP' );
+		$ok = false;
+		if ($result) {
+			$this->setService ( 'local' );
+			while ( $row = oci_fetch_assoc ( $stm ) ) {
+				if ($this->RAC) {
+					$this->setService ( 'Inst_' . $row ['INST_ID'] );
+				}
+				foreach ( $row as $col => $val ) {
+					if ($col != 'POOL_NAME' && $col != 'INST_ID' && ! is_numeric ( $col )) {
+						$this->addMetric ( $col, $val, self::TYPE_LONGINT );
+					}
+				}
+				$ok = true;
+				$this->setState ( self::STATE_OK );
+				$instances [$row ['INST_ID']] = true;
+			}
+			$this->setModule ( 'Oracle::Core' );
+			$this->setService ( 'local' );
+			$this->addMetric ( "drcp_time", ($tend - $tstart) * 1000, self::TYPE_UNSIGNED_INT );
+			if (empty ( $this->semaphore ['instances'] )) {
+				$this->addMetric ( "instances", count ( $instances ), Resmon::TYPE_INT );
+				$this->semaphore ['instances'] = true;
+			}
+		}
+		oci_free_statement ( $stm );
+		return true;
+	
 	}
 	
 	public function __destruct() {
 		if ($this->db) {
-			oci_close($this->db);
+			oci_close ( $this->db );
 		}
 	}
 

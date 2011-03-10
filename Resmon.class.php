@@ -73,13 +73,9 @@ class Resmon {
 	 * @param string $type Metric type (best defined by the TYPE_* constants)
 	 */
 	public function addMetric($name, $value, $type = self::TYPE_DEFAULT) {
-		$this->data [$this->getModule ()] [$this->getService ()] ['metrics'] [] = array (
-			'name' => $name, 
-			'value' => $value, 
-			'type' => $type
-		);
+		$this->data [$this->getModule ()] [$this->getService ()] ['metrics'] [] = array ('name' => $name, 'value' => $value, 'type' => $type );
 	}
-
+	
 	/**
 	 * Set the state of currently used module/service
 	 * 
@@ -88,45 +84,44 @@ class Resmon {
 	public function setState($state = self::STATE_OK) {
 		$this->data [$this->getModule ()] [$this->getService ()] ['state'] = $state;
 	}
-
+	
 	/**
 	 * Return the generated Resmon XML
 	 * 
 	 * @param boolean $print If set to true (default) print the XML with correct header
 	 * @return string The generated XML
 	 */
-	public function outputAsXML( $print = true ) {
+	public function outputAsXML($print = true) {
 		$output = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
 		$output .= "<?xml-stylesheet type=\"text/xsl\" href=\"resmon.xsl\"?>\n";
 		$output .= "<ResmonResults>\n";
-
-		foreach ($this->data as $module => $services) {
-			foreach ($services as $service => $serviceData) {
-				$output .= sprintf("\t<ResmonResult module=\"%s\" service=\"%s\">\n", 
-					htmlentities($module), htmlentities($service));
-				$output .= sprintf("\t\t<last_update>%d</last_update>\n", time());
+		
+		foreach ( $this->data as $module => $services ) {
+			foreach ( $services as $service => $serviceData ) {
+				$output .= sprintf ( "\t<ResmonResult module=\"%s\" service=\"%s\">\n", htmlentities ( $module ), htmlentities ( $service ) );
+				$output .= sprintf ( "\t\t<last_update>%d</last_update>\n", time () );
 				
-				foreach ($serviceData['metrics'] as $metric) {
-					
-					switch ($metric['type']) {
-						case self::TYPE_FLOAT:	
-							$value = sprintf('%f', $metric['value']); 
-							break;
-						case self::TYPE_INT:
-						case self::TYPE_LONGINT:
-						case self::TYPE_UNSIGNED_INT:
-						case self::TYPE_UNSIGNED_LONGINT:
-							$value = sprintf('%d', $metric['value']); 
-							break;
-						default:
-							$value = sprintf('%s', $metric['value']);
+				if (is_array ( $serviceData ['metrics'] )) {
+					foreach ( $serviceData ['metrics'] as $metric ) {
+						
+						switch ($metric ['type']) {
+							case self::TYPE_FLOAT :
+								$value = sprintf ( '%f', $metric ['value'] );
+								break;
+							case self::TYPE_INT :
+							case self::TYPE_LONGINT :
+							case self::TYPE_UNSIGNED_INT :
+							case self::TYPE_UNSIGNED_LONGINT :
+								$value = sprintf ( '%d', $metric ['value'] );
+								break;
+							default :
+								$value = sprintf ( '%s', $metric ['value'] );
+						}
+						
+						$output .= sprintf ( "\t\t<metric name=\"%s\" type=\"%s\">%s</metric>\n", htmlentities ( $metric ['name'] ), $metric ['type'], htmlentities ( $value ) );
 					}
-					
-					$output .= sprintf ( "\t\t<metric name=\"%s\" type=\"%s\">%s</metric>\n", 
-						htmlentities($metric['name']), $metric['type'], htmlentities($value) );
 				}
-				$output .= sprintf("\t\t<state>%s</state>\n\t</ResmonResult>\n", 
-					empty($serviceData['state'])?self::STATE_OK:$serviceData['state']);
+				$output .= sprintf ( "\t\t<state>%s</state>\n\t</ResmonResult>\n", empty ( $serviceData ['state'] ) ? self::STATE_OK : $serviceData ['state'] );
 			}
 		}
 		$output .= "</ResmonResults>\n";
@@ -138,5 +133,5 @@ class Resmon {
 		
 		return $output;
 	}
-	
+
 } // Resmon
